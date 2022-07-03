@@ -21,7 +21,7 @@ def cleanProduct(productPath:str=productPath, lineterminator:str="\n") -> pd.Dat
     Return:
         dataFrame: pd.DataFrame,
     '''
-    dataFrame=pd.read_csv(productPath, lineterminator="\n")
+    dataFrame=pd.read_csv(productPath, lineterminator=lineterminator)
 
     dataFrame=dataFrame.drop("Unnamed: 0", axis=1)
 

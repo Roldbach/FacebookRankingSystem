@@ -12,3 +12,29 @@ dataRange=255
 # File path of product information
 productPath="./Data/Products.csv"
 
+# ----- TextProcessing -----
+# The setting of dataset
+datasetSetting={
+    # The name of columns that could be used as features
+    "featureColumn":["product_name", "product_description", "location"],
+    # The name of the column that could be used as label
+    "targetColumn":"price",
+    # The proportion of test set within the whole dataset
+    "testSize":0.33
+}
+
+# The setting of CountVectorizer
+countVectorizerSetting={
+    # Only keep features with top frequencies
+    "max_features":10000,
+    # The lower threshold when building the vocabulary
+    "min_df":0.01,
+    # The upper threshold when building the vocabulary
+    "max_df":0.9,
+    # Use the built-in stop word list for English
+    "stop_words":"english"
+}
+
+
+
+
