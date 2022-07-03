@@ -1,8 +1,8 @@
 import pandas as pd
 
-from Configuration import productPath
+from Configuration import lineTerminator, productPath
 
-def cleanProduct(productPath:str=productPath, lineterminator:str="\n") -> pd.DataFrame:
+def cleanProduct(productPath:str=productPath, lineterminator:str=lineTerminator) -> pd.DataFrame:
     '''
         Return a filtered dataframe that could be used for
     further training

@@ -1,10 +1,7 @@
-import numpy as np
 import pandas as pd
-import scipy.sparse.csr as csr
 
-from Configuration import countVectorizerSetting, datasetSetting
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+from Configuration import datasetSetting, TFIDFVectorizerSetting
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
 def splitTrainTest(dataFrame:pd.DataFrame,
@@ -21,92 +18,65 @@ def splitTrainTest(dataFrame:pd.DataFrame,
         testSize: float, the proportion of test set within the whole dataset
 
     Return:
-        train: pd.DataFrame, the data frame that contains training data
-        test: pd.DataFrame, the data frame that contains test data
+        trainData: pd.DataFrame, the data frame that contains training data
+        testData: pd.DataFrame, the data frame that contains test data
         trainLabel: pd.Series, the data series that could be used as training label
         testLabel: pd.Series, the data series that could be used as test label
     '''
     dataset=dataFrame.loc[:, featureColumn]
     label=dataFrame[targetColumn]
     
-    train, test, trainLabel, testLabel=train_test_split(dataset, label, test_size=testSize)
-    return train, test, trainLabel, testLabel
+    trainData, testData, trainLabel, testLabel=train_test_split(dataset, label, test_size=testSize)
+    return trainData, testData, trainLabel, testLabel
+
+def transformData(trainData:pd.DataFrame, testData:pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    '''
+        Transform each column data using TFIDF vectorizer and 
+    concatenate all of them at the end
+
+    Argument:
+        trainData: pd.DataFrame, the data frame that contains training data
+        testData: pd.DataFrame, the data frame that contains test data
+
+    Return:
+        train: pd.DataFrame, the transformed training data which could be used for training
+        test: pd.DataFrame, the transformed testing data which could be used for testing
+    '''
+    train=[]
+    test=[]
+    column=trainData.columns
+
+    for name in column:
+        trainColumnDataFrame, testColumnDataFrame=transformColumn(trainData[name], testData[name])
+        train.append(trainColumnDataFrame)
+        test.append(testColumnDataFrame)
+
+    return pd.concat(train, axis=1), pd.concat(test, axis=1)
 
 def transformColumn(trainColumn:pd.Series, testColumn:pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
     '''
         Transform the text data to feature importance using TFIDF
-    transformer so it could be used for model training
-
-        The weight could be generated using the following steps:
-        1. Construct a CountVectorizer and fit it using the column data
-        2. Transform the column data to a sparse representation
-        3. Transform the sparse matrix to weight data frame in descending order
-
-    Argument:
-        column: pd.Series, the original text data as a column
-    
-    Return:
-        result: pd.DataFrame, the data frame containing all filtered features and 
-                              their corresponding weight
-    '''
-    trainMatrix, testMatrix=CountVectorizeColumn(trainColumn, testColumn)
-    trainDataFrame, testDataFrame=TFIDFTransformMatrix(trainMatrix, testMatrix)
-
-    print(trainDataFrame.columns)
-    print(testDataFrame.shape)
-
-def CountVectorizeColumn(trainColumn:pd.Series, testColumn:pd.Series) -> tuple[csr.csr_matrix, csr.csr_matrix]:
-    '''
-        Use CountVectorizer to fit+transform the train column
-    and transform the test column so they could both be converted
-    to their corresponding sparse representation
+    vectorizer so it could be used for model training
 
     Argument:
         trainColumn: pd.Series, the original train feature data in a column
         testColumn: pd.Series, the original test feature data in a column
     
     Return:
-        trainMatrix: scipy.sparse.csr.csr_matrix, the sparse matrix of the train column
-        testMatrix: scipy.sparse.csr.csr_matrix, the sparse matrix of the test column
+        trainColumnDataFrame: pd.DataFrame, the data frame containing all filtered features and 
+                              their corresponding weight for the training data
+        testColumnDataFrame: pd.DataFrame, the data frame containing all filtered features and
+                             their corresponding weight for the test data
     '''
-    vectorizer=CountVectorizer(stop_words=countVectorizerSetting["stop_words"],
-                            max_features=countVectorizerSetting["max_features"],
-                            min_df=countVectorizerSetting["min_df"],
-                            max_df=countVectorizerSetting["max_df"])
+    vectorizer=TfidfVectorizer(stop_words=TFIDFVectorizerSetting["stop_words"],
+                               max_features=TFIDFVectorizerSetting["max_features"],
+                               min_df=TFIDFVectorizerSetting["min_df"],
+                               max_df=TFIDFVectorizerSetting["max_df"]).fit(trainColumn)
 
-    trainMatrix=vectorizer.fit_transform(trainColumn)
-    testMatrix=vectorizer.transform(testColumn)
+    trainColumnDataFrame=pd.DataFrame(vectorizer.transform(trainColumn).todense(), columns=vectorizer.get_feature_names_out())
+    testColumnDataFrame=pd.DataFrame(vectorizer.transform(testColumn).todense(), columns=vectorizer.get_feature_names_out())
 
-    return trainMatrix, testMatrix
+    return trainColumnDataFrame, testColumnDataFrame
 
-def TFIDFTransformMatrix(trainMatrix:csr.csr_matrix, testMatrix:csr.csr_matrix) -> tuple[pd.DataFrame, pd.DataFrame]:
-    '''
-        Use TFIDF Transformer to fit+transform the train matrix
-    and transform the test matrix so they could both be converted
-    to data frames containing all features and their corresponding weights
 
-    Argument:
-        trainMatrix: scipy.sparse.csr.csr_matrix, the sparse matrix of the train column
-        testMatrix: scipy.sparse.csr.csr_matrix, the sparse matrix of the test column
-
-    Return:
-        trainDataFrame: pd.DataFrame, the data frame containing all features and 
-                                       their corresponding weights in the training set
-        testDataFrame: pd.DataFrame, the data frame containing all features and their
-                                     corresponding weights in the test set
-    '''
-    transformer=TfidfTransformer()
-    
-    trainWeight=transformer.fit_transform(trainMatrix)
-    trainWeight=np.asarray(trainWeight.mean(axis=0)).ravel().tolist()
-    trainDataFrame=pd.DataFrame({"Word":transformer.get_feature_names_out(), "Weight":trainWeight})
-
-    testWeight=transformer.fit_transform(testMatrix)
-    testWeight=np.asarray(testWeight.mean(axis=0)).ravel().tolist()
-    testDataFrame=pd.DataFrame({"Word":transformer.get_feature_names_out(), "Weight":testWeight})
-
-    trainWeight=transformer.fit_transform(trainMatrix)
-    trainDataFrame=pd.DataFrame(trainWeight.todense(), columns=transformer.get_feature_names_out())
-
-    return trainDataFrame, testDataFrame
 

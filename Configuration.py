@@ -11,6 +11,8 @@ dataRange=255
 # ----- CleanTabularData -----
 # File path of product information
 productPath="./Data/Products.csv"
+# The terminator used in the csv file
+lineTerminator="\n"
 
 # ----- TextProcessing -----
 # The setting of dataset
@@ -23,8 +25,8 @@ datasetSetting={
     "testSize":0.33
 }
 
-# The setting of CountVectorizer
-countVectorizerSetting={
+# The setting of TFIDFVectorizer
+TFIDFVectorizerSetting={
     # Only keep features with top frequencies
     "max_features":10000,
     # The lower threshold when building the vocabulary
