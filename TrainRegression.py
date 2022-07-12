@@ -1,16 +1,15 @@
 import pandas as pd
 
-from DataCleaning.CleanTabularData import cleanProduct
+from DataLoading.TextLoading import loadProduct
 from DataProcessing.TextProcessing import splitTrainTest, transformData
 from sklearn.linear_model import LinearRegression
 
-def loadProduct() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+def loadData() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     '''
         Load the product data for model training
 
         This function contains the following steps:
-        1. Clean the original product data
-        2. Split the data into the training part and test part
+        1. Split the data into the training part and test part
         2. Transform each column in each part to its corresonding data frame
         3. Concatenate all data frames to form the final dataset
     
@@ -20,14 +19,14 @@ def loadProduct() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         trainLabel: pd.Series, the data series that could be used as training label
         testLabel: pd.Series, the data series that could be used as test label
     '''
-    data=cleanProduct()
+    data=loadProduct()
     trainData, testData, trainLabel, testLabel=splitTrainTest(data)
     train, test=transformData(trainData, testData)
 
     return train, test, trainLabel, testLabel
 
 if __name__=="__main__":
-    train, test, trainLabel, testLabel=loadProduct()
+    train, test, trainLabel, testLabel=loadData()
 
     model=LinearRegression().fit(train, trainLabel)
     score=model.score(test, testLabel)

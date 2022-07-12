@@ -1,20 +1,20 @@
 import pandas as pd
 
-from Configuration import datasetSetting, TFIDFVectorizerSetting
+from Configuration import textDatasetSetting, TFIDFVectorizerSetting
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 
 def splitTrainTest(dataFrame:pd.DataFrame,
-                   featureColumn:list[str]=datasetSetting["featureColumn"],
-                   targetColumn:str=datasetSetting["targetColumn"],
-                   testSize:float=datasetSetting["testSize"]) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+                   featureColumn:list[str]=textDatasetSetting["featureColumn"],
+                   targetColumn:str=textDatasetSetting["targetColumn"],
+                   testSize:float=textDatasetSetting["testSize"]) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     '''
         Split the given dataFrame to the training and test sets separately
     
     Argument:
         dataFrame: pd.DataFrame, the original data frame after data cleaning
-        featureColumn: list, contains the name of columns that are chosen as features
-        targetColumn: list, specifies the column that contains the label
+        featureColumn: list[str], contains the name of columns that are chosen as features
+        targetColumn: str, specifies the column that contains the label
         testSize: float, the proportion of test set within the whole dataset
 
     Return:
@@ -77,6 +77,3 @@ def transformColumn(trainColumn:pd.Series, testColumn:pd.Series) -> tuple[pd.Dat
     testColumnDataFrame=pd.DataFrame(vectorizer.transform(testColumn).todense(), columns=vectorizer.get_feature_names_out())
 
     return trainColumnDataFrame, testColumnDataFrame
-
-
-
